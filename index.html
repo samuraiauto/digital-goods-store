@@ -84,7 +84,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">🔒</div>
                     <h3>Надёжно</h3>
-                    <p>Выдача после подтверждения оплаты</p>
+                    <p>Оплата переводом по согласованию, выдача после поступления</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🌍</div>
@@ -117,7 +117,7 @@
                 <div class="about-text">
                     <h2>О нас</h2>
                     <p>Мы продаём цифровые товары: eSIM и подарочные карты. Доставка — на ваш email.</p>
-                    <p>Сейчас сайт работает в режиме заявки. На следующем этапе подключим СБП через ЮKassa и автоматическую выдачу через API поставщика.</p>
+                    <p>Сайт работает в режиме заявки: вы оставляете заказ, мы отправляем реквизиты для оплаты переводом и после оплаты выдаём товар на email.</p>
                     <ul class="benefits-list">
                         <li>✓ Понятное оформление</li>
                         <li>✓ Доставка на email</li>
@@ -214,17 +214,30 @@
                     <strong>Итого: <span id="cartTotal">0</span> ₽</strong>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="flex-wrap: wrap; gap: 0.75rem;">
                 <button class="btn btn-secondary" id="clearCart">Очистить корзину</button>
                 <input
                     id="checkoutEmail"
                     type="email"
-                    placeholder="Email для доставки"
+                    placeholder="Email для связи и доставки"
                     style="flex: 1; min-width: 220px; padding: 0.9rem 1rem; border-radius: 50px; border: 2px solid rgba(0,0,0,0.1); outline: none;"
                     autocomplete="email"
                     required
                 />
-                <button class="btn btn-primary" id="checkout">Оформить (заявка)</button>
+                <input
+                    id="checkoutPhone"
+                    type="text"
+                    placeholder="Телефон или Telegram (необязательно)"
+                    style="flex: 1; min-width: 220px; padding: 0.9rem 1rem; border-radius: 50px; border: 2px solid rgba(0,0,0,0.1); outline: none;"
+                    autocomplete="tel"
+                />
+                <textarea
+                    id="checkoutNote"
+                    placeholder="Комментарий к заявке (необязательно)"
+                    rows="2"
+                    style="flex: 1 1 100%; min-width: 220px; padding: 0.9rem 1rem; border-radius: 16px; border: 2px solid rgba(0,0,0,0.1); outline: none; resize: vertical;"
+                ></textarea>
+                <button class="btn btn-primary" id="checkout">Отправить заявку</button>
             </div>
         </div>
     </div>

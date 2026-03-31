@@ -114,12 +114,16 @@ function clearCart() {
     if (cart.length === 0) return;
     
     if (confirm('Вы уверены, что хотите очистить корзину?')) {
-        cart = [];
-        saveCart();
-        updateCartCount();
-        renderCart();
+        emptyCart();
         showNotification('Корзина очищена');
     }
+}
+
+function emptyCart() {
+    cart = [];
+    saveCart();
+    updateCartCount();
+    renderCart();
 }
 
 // Сохранение корзины
@@ -244,34 +248,38 @@ function setupEventListeners() {
         const emailInput = document.getElementById('checkoutEmail');
         const email = (emailInput?.value || '').trim();
         if (!email || !email.includes('@')) {
-            alert('Введите корректный email для доставки цифрового товара');
+            alert('Введите корректный email');
             return;
         }
+
+        const phone = (document.getElementById('checkoutPhone')?.value || '').trim();
+        const note = (document.getElementById('checkoutNote')?.value || '').trim();
 
         const checkoutBtn = document.getElementById('checkout');
         const prevText = checkoutBtn?.textContent;
         if (checkoutBtn) {
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = 'Переходим к оплате...';
+            checkoutBtn.textContent = 'Отправка...';
         }
 
         try {
             const base = (window.BACKEND_BASE_URL || '').replace(/\/+$/, '');
-            const url = `${base}/api/create-payment`;
+            const url = `${base}/api/order-request`;
             const items = cart.map((it) => ({
                 id: it.id,
                 name: it.name,
                 price: it.price,
                 quantity: it.quantity,
+                currency: it.currency || 'RUB',
                 supplierProductId: it.supplierProductId || null,
             }));
 
             const controller = new AbortController();
-            const t = setTimeout(() => controller.abort(), 15000);
+            const t = setTimeout(() => controller.abort(), 20000);
             const resp = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, items }),
+                body: JSON.stringify({ email, phone, note, items }),
                 signal: controller.signal,
             });
             clearTimeout(t);
@@ -281,18 +289,21 @@ function setupEventListeners() {
                 throw new Error(text || `HTTP_${resp.status}`);
             }
             const data = await resp.json();
-            const confirmationUrl = data?.confirmationUrl;
-            if (!confirmationUrl) throw new Error('NO_CONFIRMATION_URL');
-
-            // Не очищаем корзину до оплаты; после оплаты пользователь вернётся на success.html
-            window.location.href = confirmationUrl;
+            const orderId = data?.orderId;
+            alert(
+                orderId
+                    ? `Заявка отправлена. Номер: ${orderId}. Мы свяжемся с вами и пришлём реквизиты для оплаты переводом.`
+                    : 'Заявка отправлена. Мы свяжемся с вами и пришлём реквизиты для оплаты переводом.'
+            );
+            emptyCart();
+            closeCartModal();
         } catch (e) {
             console.error(e);
-            alert('Не удалось создать оплату. Проверьте, что бэкенд доступен и настроен. Попробуйте ещё раз.');
+            alert('Не удалось отправить заявку. Проверьте подключение к серверу и настройку почты. Попробуйте ещё раз.');
         } finally {
             if (checkoutBtn) {
                 checkoutBtn.disabled = false;
-                checkoutBtn.textContent = prevText || 'Оформить заказ';
+                checkoutBtn.textContent = prevText || 'Отправить заявку';
             }
         }
     });
@@ -315,24 +326,6 @@ function setupEventListeners() {
         alert('Спасибо за ваше сообщение! Мы свяжемся с вами в ближайшее время.');
         e.target.reset();
     });
-}
-
-function buildOrderText(customerEmail) {
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const lines = [];
-    lines.push('Заявка на покупку цифрового товара');
-    lines.push('');
-    lines.push(`Email для доставки: ${customerEmail}`);
-    lines.push('');
-    lines.push('Товары:');
-    cart.forEach((item) => {
-        lines.push(`- ${item.name} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}`);
-    });
-    lines.push('');
-    lines.push(`Итого: ${formatPrice(total)}`);
-    lines.push('');
-    lines.push('Комментарий: (при необходимости)');
-    return lines.join('\n');
 }
 
 // Плавная прокрутка

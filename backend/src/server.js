@@ -3,16 +3,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 import dotenv from "dotenv";
-import { createPayment, parseYookassaEvent, verifyYookassaWebhook } from "./yookassa.js";
-import { fetchSupplierCatalog, fulfillFromSupplier } from "./supplier.js";
-import { sendDigitalGoodsEmail } from "./mailer.js";
-import { ordersStore } from "./store.js";
+import { fetchSupplierCatalog } from "./supplier.js";
+import { sendDigitalGoodsEmail, sendOrderRequestEmails } from "./mailer.js";
 
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// Всегда грузим backend/.env, даже если процесс запущен не из каталога backend/.
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 const siteRoot = path.resolve(__dirname, "..", "..");
 
@@ -20,7 +17,6 @@ app.use(express.static(siteRoot));
 
 app.use("/api", express.json({ limit: "1mb" }));
 
-// Simple CORS for API (useful when frontend is on GitHub Pages).
 app.use("/api", (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", process.env.PUBLIC_ORIGIN?.trim() || "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -51,8 +47,6 @@ function requireAdmin(req, res) {
   return null;
 }
 
-// Test endpoint: sends a delivery email without payment/provider.
-// Useful to validate SMTP + email templates quickly.
 app.post("/api/admin/test-email", async (req, res) => {
   const denied = requireAdmin(req, res);
   if (denied) return;
@@ -78,7 +72,6 @@ app.post("/api/admin/test-email", async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    // Force mock mode by not calling supplier at all.
     const fulfillment = {
       mode: "mock",
       deliveredItems: [
@@ -104,24 +97,38 @@ app.post("/api/admin/test-email", async (req, res) => {
   }
 });
 
-app.post("/api/create-payment", async (req, res) => {
-  try {
-    const { email, items } = req.body ?? {};
+function totalLabelFromItems(items) {
+  const sums = {};
+  for (const it of items) {
+    const cur = String(it.currency || "RUB").toUpperCase();
+    const p = Number(it.price);
+    const q = Number(it.quantity);
+    if (!Number.isFinite(p) || !Number.isFinite(q)) continue;
+    sums[cur] = (sums[cur] || 0) + p * q;
+  }
+  const parts = Object.entries(sums).map(([c, s]) => `${s} ${c}`);
+  return parts.length ? parts.join(", ") : "—";
+}
 
-    if (!email || typeof email !== "string") {
+/** Заявка без онлайн‑оплаты: письмо администратору (+ опционально клиенту). */
+app.post("/api/order-request", async (req, res) => {
+  try {
+    const { email, items, phone, note } = req.body ?? {};
+
+    if (!email || typeof email !== "string" || !email.includes("@")) {
       return res.status(400).json({ error: "EMAIL_REQUIRED" });
     }
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "ITEMS_REQUIRED" });
     }
 
-    // items: [{ id, name, price, quantity, supplierProductId }]
     const normalizedItems = items
       .map((it) => ({
         id: it?.id,
         name: String(it?.name ?? ""),
         price: Number(it?.price ?? 0),
         quantity: Number(it?.quantity ?? 0),
+        currency: String(it?.currency ?? "RUB").trim() || "RUB",
         supplierProductId: it?.supplierProductId ? String(it.supplierProductId) : null,
       }))
       .filter((it) => it.name && it.price > 0 && it.quantity > 0);
@@ -130,92 +137,25 @@ app.post("/api/create-payment", async (req, res) => {
       return res.status(400).json({ error: "INVALID_ITEMS" });
     }
 
-    const total = normalizedItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
-    if (!Number.isFinite(total) || total <= 0) {
-      return res.status(400).json({ error: "INVALID_TOTAL" });
-    }
+    const noteStr = typeof note === "string" ? note.trim().slice(0, 2000) : "";
+    const phoneStr = typeof phone === "string" ? phone.trim().slice(0, 80) : "";
 
     const orderId = crypto.randomUUID();
-    await ordersStore.create({
-      id: orderId,
-      email,
+    const label = totalLabelFromItems(normalizedItems);
+
+    await sendOrderRequestEmails({
+      orderId,
+      customerEmail: email.trim(),
+      phone: phoneStr || undefined,
       items: normalizedItems,
-      total,
-      status: "created",
-      createdAt: new Date().toISOString(),
+      totalLabel: label,
+      note: noteStr || undefined,
     });
 
-    const confirmationReturnUrl =
-      process.env.PUBLIC_RETURN_URL?.trim() || "http://localhost:3000/success.html";
-
-    const payment = await createPayment({
-      orderId,
-      amountRub: total,
-      description: `Заказ ${orderId}`,
-      returnUrl: confirmationReturnUrl,
-      customerEmail: email,
-    });
-
-    await ordersStore.update(orderId, {
-      status: "payment_created",
-      yookassaPaymentId: payment.id,
-    });
-
-    res.json({
-      orderId,
-      paymentId: payment.id,
-      confirmationUrl: payment.confirmation?.confirmation_url,
-    });
+    res.json({ ok: true, orderId });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "CREATE_PAYMENT_FAILED" });
-  }
-});
-
-// YooKassa webhooks are posted as JSON.
-app.post("/api/yookassa/webhook", express.json({ type: "*/*" }), async (req, res) => {
-  try {
-    if (process.env.YOOKASSA_WEBHOOK_SECRET) {
-      const ok = verifyYookassaWebhook(req);
-      if (!ok) return res.status(401).send("invalid signature");
-    }
-
-    const event = parseYookassaEvent(req.body);
-    if (!event) return res.status(400).send("bad event");
-
-    const paymentId = event.object?.id;
-    const orderId = event.object?.metadata?.order_id;
-
-    if (!paymentId || !orderId) return res.status(200).send("ignored");
-
-    const order = await ordersStore.get(orderId);
-    if (!order) return res.status(200).send("unknown order");
-
-    // Idempotency: if already fulfilled, do nothing.
-    if (order.status === "fulfilled") return res.status(200).send("ok");
-
-    const eventType = event.event;
-
-    if (eventType === "payment.succeeded") {
-      await ordersStore.update(orderId, { status: "paid" });
-
-      const fulfillment = await fulfillFromSupplier(order);
-      await ordersStore.update(orderId, { status: "fulfilled", fulfillment });
-
-      await sendDigitalGoodsEmail({
-        to: order.email,
-        orderId,
-        items: order.items,
-        fulfillment,
-      });
-    }
-
-    res.status(200).send("ok");
-  } catch (e) {
-    console.error(e);
-    // Return 200 to avoid endless retries if fulfillment fails;
-    // you can re-process via a future admin endpoint.
-    res.status(200).send("ok");
+    res.status(500).json({ error: "ORDER_REQUEST_FAILED" });
   }
 });
 
@@ -224,4 +164,3 @@ const host = process.env.LISTEN_HOST?.trim() || "0.0.0.0";
 app.listen(port, host, () => {
   console.log(`Backend listening on http://${host}:${port}`);
 });
-

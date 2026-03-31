@@ -53,3 +53,62 @@ export async function sendDigitalGoodsEmail({ to, orderId, items, fulfillment })
   });
 }
 
+function formatMoneyLine(item) {
+  const q = Number(item?.quantity ?? 0);
+  const p = Number(item?.price ?? 0);
+  const cur = String(item?.currency ?? "RUB").toUpperCase();
+  const sub = Number.isFinite(p) && Number.isFinite(q) ? p * q : NaN;
+  const subStr = Number.isFinite(sub) ? `${sub} ${cur}` : "";
+  return `- ${item.name} × ${q}${subStr ? ` — ${subStr}` : ""}`;
+}
+
+export async function sendOrderRequestEmails({ orderId, customerEmail, phone, items, totalLabel, note }) {
+  const notifyTo = process.env.ORDER_NOTIFY_EMAIL?.trim();
+  if (!notifyTo) throw new Error("ORDER_NOTIFY_EMAIL is required");
+
+  const from = process.env.MAIL_FROM?.trim() || process.env.SMTP_USER?.trim();
+  if (!from) throw new Error("MAIL_FROM (or SMTP_USER) is required");
+
+  const transport = getTransport();
+
+  const adminLines = [];
+  adminLines.push(`Новая заявка: ${orderId}`);
+  adminLines.push(`Email клиента: ${customerEmail}`);
+  if (phone) adminLines.push(`Телефон / мессенджер: ${phone}`);
+  if (note) adminLines.push(`Комментарий: ${note}`);
+  adminLines.push("");
+  adminLines.push("Состав:");
+  for (const it of items) adminLines.push(formatMoneyLine(it));
+  adminLines.push("");
+  adminLines.push(`Итого (ориентир): ${totalLabel}`);
+
+  await transport.sendMail({
+    from,
+    to: notifyTo,
+    subject: `Новая заявка ${orderId}`,
+    text: adminLines.join("\n"),
+  });
+
+  const sendConfirm = process.env.ORDER_SEND_CUSTOMER_CONFIRM?.trim() !== "false";
+  if (!sendConfirm) return;
+
+  const clines = [];
+  clines.push("Спасибо за заявку!");
+  clines.push("");
+  clines.push(`Номер заявки: ${orderId}`);
+  clines.push(`Состав:`);
+  for (const it of items) clines.push(formatMoneyLine(it));
+  clines.push("");
+  clines.push(`Итого (ориентир): ${totalLabel}`);
+  clines.push("");
+  clines.push("Дальше мы свяжемся с вами и отправим реквизиты для оплаты переводом.");
+  clines.push("После получения оплаты отправим цифровой товар на указанный email.");
+
+  await transport.sendMail({
+    from,
+    to: customerEmail,
+    subject: `Заявка принята — ${orderId}`,
+    text: clines.join("\n"),
+  });
+}
+
