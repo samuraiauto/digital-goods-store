@@ -215,7 +215,7 @@ function setupEventListeners() {
         // Пока сайт полностью статический: формируем заказ и открываем письмо продавцу.
         // Позже заменим на создание платежа (ЮKassa) и автоматическую выдачу.
         const orderText = buildOrderText(email);
-        const shopEmail = 'sales@example.com'; // замените на ваш email
+        const shopEmail = 'xx33west@gmail.com';
         const subject = encodeURIComponent('Новый заказ цифрового товара');
         const body = encodeURIComponent(orderText);
         window.location.href = `mailto:${shopEmail}?subject=${subject}&body=${body}`;
