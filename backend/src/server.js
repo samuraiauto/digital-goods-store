@@ -43,6 +43,67 @@ app.get("/api/catalog", async (_req, res) => {
   }
 });
 
+function requireAdmin(req, res) {
+  const token = process.env.ADMIN_TOKEN?.trim();
+  if (!token) return res.status(503).json({ error: "ADMIN_DISABLED" });
+  const auth = req.get("Authorization") || "";
+  if (auth !== `Bearer ${token}`) return res.status(401).json({ error: "UNAUTHORIZED" });
+  return null;
+}
+
+// Test endpoint: sends a delivery email without payment/provider.
+// Useful to validate SMTP + email templates quickly.
+app.post("/api/admin/test-email", async (req, res) => {
+  const denied = requireAdmin(req, res);
+  if (denied) return;
+  try {
+    const email = String(req.body?.email || "").trim();
+    if (!email || !email.includes("@")) return res.status(400).json({ error: "EMAIL_REQUIRED" });
+
+    const orderId = `test-${crypto.randomUUID()}`;
+    const order = {
+      id: orderId,
+      email,
+      items: [
+        {
+          id: "test-item",
+          name: "Тестовый цифровой товар",
+          price: 1,
+          quantity: 1,
+          supplierProductId: null,
+        },
+      ],
+      total: 1,
+      status: "test",
+      createdAt: new Date().toISOString(),
+    };
+
+    // Force mock mode by not calling supplier at all.
+    const fulfillment = {
+      mode: "mock",
+      deliveredItems: [
+        {
+          name: order.items[0].name,
+          quantity: 1,
+          codes: ["DEMO-CODE-NOT-FOR-PRODUCTION"],
+        },
+      ],
+    };
+
+    await sendDigitalGoodsEmail({
+      to: order.email,
+      orderId,
+      items: order.items,
+      fulfillment,
+    });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "TEST_EMAIL_FAILED" });
+  }
+});
+
 app.post("/api/create-payment", async (req, res) => {
   try {
     const { email, items } = req.body ?? {};
