@@ -49,7 +49,7 @@ function renderProducts(filter = 'all') {
                 <h3 class="product-name">${product.name}</h3>
                 <p class="product-description">${product.description}</p>
                 <div class="product-footer">
-                    <div class="product-price">${formatPrice(product.price)}</div>
+                    <div class="product-price">${formatPriceWithCurrency(product)}</div>
                     <button class="add-to-cart" onclick="addToCart(${product.id})">
                         В корзину
                     </button>
@@ -162,7 +162,17 @@ function renderCart() {
 
 // Форматирование цены
 function formatPrice(price) {
-    return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
+    const p = Number(price);
+    if (!Number.isFinite(p)) return '';
+    return new Intl.NumberFormat('ru-RU').format(p) + ' ₽';
+}
+
+function formatPriceWithCurrency(product) {
+    const p = Number(product?.price);
+    if (!Number.isFinite(p)) return '';
+    const cur = (product?.currency || 'RUB').toUpperCase();
+    if (cur === 'RUB') return formatPrice(p);
+    return `${new Intl.NumberFormat('ru-RU').format(p)} ${cur}`;
 }
 
 // Показ модального окна корзины
@@ -189,7 +199,7 @@ function showProductModal(productId) {
             <div style="text-align: center;">
                 <div style="font-size: 8rem; margin-bottom: 1rem;">${product.emoji}</div>
                 <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem;">
-                    ${formatPrice(product.price)}
+                    ${formatPriceWithCurrency(product)}
                 </div>
                 <button class="btn btn-primary" style="width: 100%;" onclick="addToCart(${product.id}); closeProductModal();">
                     Добавить в корзину
