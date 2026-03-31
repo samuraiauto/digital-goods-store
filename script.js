@@ -236,7 +236,7 @@ function setupEventListeners() {
     document.getElementById('cartIcon').addEventListener('click', showCartModal);
     document.getElementById('closeCart').addEventListener('click', closeCartModal);
     document.getElementById('clearCart').addEventListener('click', clearCart);
-    document.getElementById('checkout').addEventListener('click', () => {
+    document.getElementById('checkout').addEventListener('click', async () => {
         if (cart.length === 0) {
             alert('Корзина пуста');
             return;
@@ -247,17 +247,54 @@ function setupEventListeners() {
             alert('Введите корректный email для доставки цифрового товара');
             return;
         }
-        // Пока сайт полностью статический: формируем заказ и открываем письмо продавцу.
-        // Позже заменим на создание платежа (ЮKassa) и автоматическую выдачу.
-        const orderText = buildOrderText(email);
-        const shopEmail = 'xx33west@gmail.com';
-        const subject = encodeURIComponent('Новый заказ цифрового товара');
-        const body = encodeURIComponent(orderText);
-        window.location.href = `mailto:${shopEmail}?subject=${subject}&body=${body}`;
 
-        alert('Заказ сформирован. Сейчас откроется ваше почтовое приложение для отправки заявки. После оплаты мы отправим товар на указанный email.');
-        clearCart();
-        closeCartModal();
+        const checkoutBtn = document.getElementById('checkout');
+        const prevText = checkoutBtn?.textContent;
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = 'Переходим к оплате...';
+        }
+
+        try {
+            const base = (window.BACKEND_BASE_URL || '').replace(/\/+$/, '');
+            const url = `${base}/api/create-payment`;
+            const items = cart.map((it) => ({
+                id: it.id,
+                name: it.name,
+                price: it.price,
+                quantity: it.quantity,
+                supplierProductId: it.supplierProductId || null,
+            }));
+
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), 15000);
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, items }),
+                signal: controller.signal,
+            });
+            clearTimeout(t);
+
+            if (!resp.ok) {
+                const text = await resp.text().catch(() => '');
+                throw new Error(text || `HTTP_${resp.status}`);
+            }
+            const data = await resp.json();
+            const confirmationUrl = data?.confirmationUrl;
+            if (!confirmationUrl) throw new Error('NO_CONFIRMATION_URL');
+
+            // Не очищаем корзину до оплаты; после оплаты пользователь вернётся на success.html
+            window.location.href = confirmationUrl;
+        } catch (e) {
+            console.error(e);
+            alert('Не удалось создать оплату. Проверьте, что бэкенд доступен и настроен. Попробуйте ещё раз.');
+        } finally {
+            if (checkoutBtn) {
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = prevText || 'Оформить заказ';
+            }
+        }
     });
 
     // Модальное окно продукта

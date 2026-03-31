@@ -8,12 +8,12 @@ import { fetchSupplierCatalog, fulfillFromSupplier } from "./supplier.js";
 import { sendDigitalGoodsEmail } from "./mailer.js";
 import { ordersStore } from "./store.js";
 
-dotenv.config();
-
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Всегда грузим backend/.env, даже если процесс запущен не из каталога backend/.
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 const siteRoot = path.resolve(__dirname, "..", "..");
 
 app.use(express.static(siteRoot));
