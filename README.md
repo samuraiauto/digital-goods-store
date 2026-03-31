@@ -78,7 +78,17 @@ SUPPLIER_API_KEY=PASTE_YOUR_TOKEN_HERE
 2. Фронт отправляет `POST /api/order-request` с email, корзиной и опциональными полями телефона/комментария.
 3. Бэкенд шлёт письмо на `ORDER_NOTIFY_EMAIL` и (по умолчанию) копию клиенту. См. `ORDER_SEND_CUSTOMER_CONFIRM` в `.env.example`.
 
-Если фронт на GitHub Pages, задайте базовый URL бэкенда в переменной **`window.BACKEND_BASE_URL`** (например в отдельном маленьком скрипте перед `script.js`).
+Файл **`config.js`** сам выставляет `window.BACKEND_BASE_URL` для сайта на **GitHub Pages** (`*.github.io`), чтобы запросы шли на ваш VPS. Адрес по умолчанию смотрите в `config.js` и при необходимости замените на **HTTPS** после настройки домена (см. `deploy/nginx-api.example.conf`).
+
+Важно: страница на GitHub открывается по **HTTPS**. Если API остаётся на **`http://IP:3000`**, браузер может **заблокировать** запросы (mixed content). Решение: nginx + Let’s Encrypt на VPS и `BACKEND_BASE_URL = https://ваш-домен`.
+
+### Обновление кода на VPS одной командой
+
+На сервере (после `git clone` в `/root/digital-goods-store`):
+
+```bash
+bash /root/digital-goods-store/scripts/vps-update.sh
+```
 
 ## Функционал
 
