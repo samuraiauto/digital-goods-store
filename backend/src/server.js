@@ -159,7 +159,8 @@ app.post("/api/yookassa/webhook", express.json({ type: "*/*" }), async (req, res
 });
 
 const port = Number(process.env.PORT ?? 3000);
-app.listen(port, () => {
-  console.log(`Backend listening on http://localhost:${port}`);
+const host = process.env.LISTEN_HOST?.trim() || "0.0.0.0";
+app.listen(port, host, () => {
+  console.log(`Backend listening on http://${host}:${port}`);
 });
 
