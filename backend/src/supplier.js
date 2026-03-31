@@ -4,13 +4,16 @@
 import crypto from "node:crypto";
 
 function supplierUrl(pathname) {
-  const baseUrl = process.env.SUPPLIER_BASE_URL?.trim();
+  const baseUrl = (process.env.SUPPLIER_BASE_URL || "").trim();
   if (!baseUrl) throw new Error("SUPPLIER_BASE_URL is required");
-  return `${baseUrl.replace(/\\/+$/, "")}${pathname.startsWith("/") ? "" : "/"}${pathname}`;
+  const base = baseUrl.replace(/\/+$/, "");
+  const path = String(pathname || "");
+  const sep = path.startsWith("/") ? "" : "/";
+  return base + sep + path;
 }
 
 function supplierHeaders() {
-  const apiKey = process.env.SUPPLIER_API_KEY?.trim();
+  const apiKey = (process.env.SUPPLIER_API_KEY || "").trim();
   if (!apiKey) throw new Error("SUPPLIER_API_KEY is required");
   return {
     "Content-Type": "application/json",
