@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 import dotenv from "dotenv";
 import { createPayment, parseYookassaEvent, verifyYookassaWebhook } from "./yookassa.js";
-import { fulfillFromSupplier } from "./supplier.js";
+import { fetchSupplierCatalog, fulfillFromSupplier } from "./supplier.js";
 import { sendDigitalGoodsEmail } from "./mailer.js";
 import { ordersStore } from "./store.js";
 
@@ -20,8 +20,27 @@ app.use(express.static(siteRoot));
 
 app.use("/api", express.json({ limit: "1mb" }));
 
+// Simple CORS for API (useful when frontend is on GitHub Pages).
+app.use("/api", (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", process.env.PUBLIC_ORIGIN?.trim() || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  if (req.method === "OPTIONS") return res.status(204).end();
+  next();
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get("/api/catalog", async (_req, res) => {
+  try {
+    const catalog = await fetchSupplierCatalog();
+    res.json(catalog);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "CATALOG_FAILED" });
+  }
 });
 
 app.post("/api/create-payment", async (req, res) => {

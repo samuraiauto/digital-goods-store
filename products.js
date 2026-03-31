@@ -1,6 +1,6 @@
 // Данные цифровых продуктов (пример).
 // ВАЖНО: для интеграции с B2B поставщиком у каждого товара должен быть supplierProductId.
-const products = [
+window.PRODUCTS_DEFAULT = [
     {
         id: 1,
         name: "eSIM Европа 10GB / 30 дней",
@@ -22,3 +22,6 @@ const products = [
         emoji: "🎁"
     }
 ];
+
+// Текущий список продуктов. Может быть перезаписан после загрузки каталога с бэкенда.
+window.products = window.PRODUCTS_DEFAULT;

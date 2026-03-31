@@ -1,26 +1,51 @@
 // Корзина
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let productsState = Array.isArray(window.products) ? window.products : (Array.isArray(window.PRODUCTS_DEFAULT) ? window.PRODUCTS_DEFAULT : []);
 
 // Инициализация
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await maybeLoadSupplierCatalog();
     renderProducts();
     updateCartCount();
     setupEventListeners();
     setupSmoothScroll();
 });
 
+async function maybeLoadSupplierCatalog() {
+    // Если сайт открыт на GitHub Pages, бэкенда рядом нет.
+    // Можно указать URL бэкенда вручную в window.BACKEND_BASE_URL (например через отдельный config.js),
+    // но по умолчанию пробуем относительный /api/catalog (когда фронт отдаёт VPS).
+    const base = (window.BACKEND_BASE_URL || '').replace(/\/+$/, '');
+    const url = `${base}/api/catalog`;
+
+    try {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 2500);
+        const resp = await fetch(url, { signal: controller.signal, method: 'GET' });
+        clearTimeout(t);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (Array.isArray(data?.products) && data.products.length > 0) {
+            productsState = data.products;
+            window.products = productsState;
+        }
+    } catch {
+        // ignore: fallback to default products
+    }
+}
+
 // Рендеринг продуктов
 function renderProducts(filter = 'all') {
     const productsGrid = document.getElementById('productsGrid');
     const filteredProducts = filter === 'all' 
-        ? products 
-        : products.filter(p => p.category === filter);
+        ? productsState 
+        : productsState.filter(p => p.category === filter);
 
     productsGrid.innerHTML = filteredProducts.map(product => `
         <div class="product-card" data-product-id="${product.id}">
             <div class="product-image">${product.emoji}</div>
             <div class="product-info">
-                <div class="product-category">${product.category === 'esim' ? 'eSIM' : 'Подарочная карта'}</div>
+                <div class="product-category">${product.category === 'esim' ? 'eSIM' : (product.category === 'giftcards' ? 'Подарочная карта' : 'Товар')}</div>
                 <h3 class="product-name">${product.name}</h3>
                 <p class="product-description">${product.description}</p>
                 <div class="product-footer">
@@ -56,7 +81,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 
 // Добавление в корзину
 function addToCart(productId) {
-    const product = products.find(p => p.id === productId);
+    const product = productsState.find(p => p.id === productId);
     if (!product) return;
 
     const existingItem = cart.find(item => item.id === productId);
@@ -153,7 +178,7 @@ function closeCartModal() {
 
 // Показ модального окна продукта
 function showProductModal(productId) {
-    const product = products.find(p => p.id === productId);
+    const product = productsState.find(p => p.id === productId);
     if (!product) return;
 
     const modal = document.getElementById('productModal');

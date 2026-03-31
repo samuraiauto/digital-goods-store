@@ -1,6 +1,8 @@
 # env / secrets
 .env
 .env.*
+!.env.example
+!backend/.env.example
 
 # backend runtime data
 backend/data/
