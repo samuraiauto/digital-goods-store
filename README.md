@@ -1,6 +1,6 @@
-# iDaLatex - Витрина + продажа цифровых товаров
+# Digital Goods Store — витрина цифровых товаров
 
-Статический сайт + небольшой Node.js бэкенд для приема оплаты (СБП через провайдера) и выдачи цифровых товаров на email через API поставщика (B2B).
+Статический сайт + небольшой Node.js бэкенд для приема оплаты (СБП через ЮKassa) и выдачи цифровых товаров на email через API поставщика (B2B).
 
 ## Особенности
 
@@ -15,37 +15,15 @@
 ## Структура проекта
 
 ```
-iDaLatex/
+digital-goods-store/
 ├── index.html      # Главная HTML страница
 ├── styles.css      # Стили CSS
 ├── script.js       # JavaScript функционал
 ├── products.js     # Данные о продуктах
 ├── success.html    # Страница возврата после оплаты
+├── assets/         # Лого и статические ресурсы
 └── backend/        # Бэкенд (оплата + вебхуки + email + API поставщика)
 └── README.md       # Документация
-```
-
-## Загрузка на GitHub
-
-Проект уже инициализирован как git репозиторий. Для загрузки на GitHub:
-
-### Вариант 1: Использование скрипта (рекомендуется)
-
-1. Создайте новый репозиторий на GitHub: https://github.com/new
-2. Скопируйте URL вашего репозитория (например: `https://github.com/username/iDaLatex.git`)
-3. Запустите скрипт:
-```bash
-./deploy-to-github.sh https://github.com/username/iDaLatex.git
-```
-
-### Вариант 2: Ручная загрузка
-
-1. Создайте новый репозиторий на GitHub: https://github.com/new
-2. Выполните команды:
-```bash
-git remote add origin https://github.com/username/iDaLatex.git
-git branch -M main
-git push -u origin main
 ```
 
 ## Запуск проекта
@@ -73,6 +51,27 @@ npm run dev
 
 4. Откройте сайт: `http://localhost:3000`
 
+## Подключение B2B поставщика (API ключ)
+
+Важно: **API ключ нельзя добавлять в фронтенд** (GitHub Pages), иначе его увидят все. Ключ хранится **только на бэкенде** в `backend/.env` (файл игнорируется git).
+
+### 1) Заполните `.env` на VPS
+
+На сервере создайте файл `backend/.env` (на основе `backend/.env.example`) и укажите:
+
+```env
+SUPPLIER_BASE_URL=https://api.example.com
+SUPPLIER_API_KEY=PASTE_YOUR_TOKEN_HERE
+```
+
+### 2) Привяжите товары к поставщику
+
+В `products.js` у каждого товара должен быть `supplierProductId` — это ID товара у поставщика.
+
+### 3) Реализуйте точный запрос к API поставщика
+
+Логика выдачи находится в `backend/src/supplier.js`. Туда мы подставим реальные эндпоинты/поля ответа по документации поставщика.
+
 ### Вебхуки
 
 ЮKassa должна уметь отправлять вебхук на:
@@ -98,9 +97,8 @@ npm run dev
 - Сохранение в localStorage
 
 ### Продукты
-- 6 видов подушек из натурального латекса
-- 8 видов матрасов из натурального латекса
-- Детальная информация о каждом продукте
+- eSIM
+- Подарочные карты
 - Фильтрация по категориям
 
 ## Технологии
@@ -125,10 +123,7 @@ npm run dev
 
 ```css
 :root {
-    --primary-color: #2d5016;
-    --primary-light: #4a7c2a;
-    --secondary-color: #f5f5f0;
-    --accent-color: #8b9a5b;
+    /* ... */
     /* ... */
 }
 ```
@@ -140,11 +135,12 @@ npm run dev
 {
     id: 15,
     name: "Название продукта",
-    category: "pillows", // или "mattresses"
+    category: "esim", // или "giftcards"
+    supplierProductId: "SUPPLIER_PRODUCT_ID",
     price: 5000,
     description: "Описание продукта",
     features: ["Характеристика 1", "Характеристика 2"],
-    emoji: "🛏️"
+    emoji: "🎁"
 }
 ```
 
@@ -154,4 +150,4 @@ npm run dev
 
 ## Контакты
 
-Для вопросов и предложений: info@idalatex.ru
+Для вопросов и предложений: xx33west@gmail.com
