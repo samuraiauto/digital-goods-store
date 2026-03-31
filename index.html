@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Купить латексные подушки и матрасы из 100% натурального латекса. Ортопедические подушки и матрасы для здорового сна. Доставка по России.">
+    <meta name="keywords" content="латексные подушки, латексные матрасы, натуральный латекс, ортопедические подушки, ортопедические матрасы, подушки из латекса, матрасы из латекса">
+    <meta name="author" content="iDaLatex">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://samuraiauto.github.io/iDaLatex/">
+    <meta property="og:title" content="iDaLatex - Натуральные латексные подушки и матрасы">
+    <meta property="og:description" content="100% натуральные латексные подушки и матрасы для здорового сна. Ортопедическая поддержка, гипоаллергенно, долговечно.">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://samuraiauto.github.io/iDaLatex/">
+    <meta property="twitter:title" content="iDaLatex - Натуральные латексные подушки и матрасы">
+    <meta property="twitter:description" content="100% натуральные латексные подушки и матрасы для здорового сна.">
+    
+    <title>iDaLatex - Натуральные латексные подушки и матрасы</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="container">
+                <div class="nav-content">
+                    <div class="logo">
+                        <h1>iDaLatex</h1>
+                        <span class="tagline">100% натуральный латекс</span>
+                    </div>
+                    <ul class="nav-menu" role="navigation">
+                        <li><a href="#home" aria-label="Перейти на главную">Главная</a></li>
+                        <li><a href="#products" aria-label="Перейти к продуктам">Продукты</a></li>
+                        <li><a href="#about" aria-label="О компании">О нас</a></li>
+                        <li><a href="#contact" aria-label="Контакты">Контакты</a></li>
+                    </ul>
+                    <button class="cart-icon" id="cartIcon" aria-label="Открыть корзину" aria-expanded="false">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                        </svg>
+                        <span class="cart-count" id="cartCount" aria-live="polite">0</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Здоровый сон начинается здесь</h1>
+            <p class="hero-subtitle">100% натуральные латексные подушки и матрасы для идеального отдыха</p>
+            <a href="#products" class="btn btn-primary" aria-label="Перейти к каталогу продуктов">Смотреть каталог</a>
+        </div>
+        <div class="hero-image">
+            <div class="hero-placeholder"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌿</div>
+                    <h3>100% Натуральный латекс</h3>
+                    <p>Экологически чистый материал без синтетических добавок</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">😴</div>
+                    <h3>Идеальная поддержка</h3>
+                    <p>Анатомическая форма для комфортного сна</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Долговечность</h3>
+                    <p>Высокое качество, которое прослужит годами</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌱</div>
+                    <h3>Гипоаллергенно</h3>
+                    <p>Безопасно для людей с аллергией</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products">
+        <div class="container">
+            <h2 class="section-title">Наши продукты</h2>
+            <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="esim">eSIM</button>
+                <button class="filter-btn" data-filter="giftcards">Подарочные карты</button>
+            </div>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>О нас</h2>
+                    <p>iDaLatex — это компания, специализирующаяся на производстве и продаже высококачественных латексных подушек и матрасов из 100% натурального латекса.</p>
+                    <p>Мы верим, что качественный сон — это основа здоровой и активной жизни. Наши продукты созданы с заботой о вашем комфорте и здоровье.</p>
+                    <ul class="benefits-list">
+                        <li>✓ Натуральный латекс высшего качества</li>
+                        <li>✓ Анатомическая поддержка позвоночника</li>
+                        <li>✓ Антибактериальные свойства</li>
+                        <li>✓ Дышащий материал</li>
+                        <li>✓ Гарантия качества</li>
+                    </ul>
+                </div>
+                <div class="about-image">
+                    <div class="about-placeholder"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Свяжитесь с нами</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h3>Телефон</h3>
+                        <p>+7 (999) 123-45-67</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Email</h3>
+                        <p>info@idalatex.ru</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Адрес</h3>
+                        <p>г. Москва, ул. Примерная, д. 1</p>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <input type="text" placeholder="Ваше имя" required>
+                    <input type="email" placeholder="Email" required>
+                    <textarea placeholder="Сообщение" rows="5" required></textarea>
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>iDaLatex</h3>
+                    <p>100% натуральный латекс для здорового сна</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Навигация</h4>
+                    <ul>
+                        <li><a href="#home">Главная</a></li>
+                        <li><a href="#products">Продукты</a></li>
+                        <li><a href="#about">О нас</a></li>
+                        <li><a href="#contact">Контакты</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <p>+7 (999) 123-45-67</p>
+                    <p>info@idalatex.ru</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 iDaLatex. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Корзина</h2>
+                <button class="modal-close" id="closeCart">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItems"></div>
+                <div class="cart-total">
+                    <strong>Итого: <span id="cartTotal">0</span> ₽</strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="clearCart">Очистить корзину</button>
+                <input
+                    id="checkoutEmail"
+                    type="email"
+                    placeholder="Email для доставки"
+                    style="flex: 1; min-width: 220px; padding: 0.9rem 1rem; border-radius: 50px; border: 2px solid rgba(0,0,0,0.1); outline: none;"
+                    autocomplete="email"
+                    required
+                />
+                <button class="btn btn-primary" id="checkout">Оформить (заявка)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="modalProductName"></h2>
+                <button class="modal-close" id="closeProduct">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalProductContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="products.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
